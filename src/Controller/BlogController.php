@@ -13,19 +13,25 @@ namespace App\Controller;
 
 use App\Entity\Comment;
 use App\Entity\Post;
+use App\Entity\User;
 use App\Events;
 use App\Form\CommentType;
 use App\Repository\PostRepository;
 use App\Repository\TagRepository;
+use App\Repository\UserRepository;
+use App\Response\PostCollection;
+use App\Response\UserCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * Controller used to manage blog contents in the public part of the site.
@@ -62,14 +68,37 @@ class BlogController extends AbstractController
     }
 
     /**
+     * @Route("/posts", methods={"GET"}, name="blog_posts")
+     * @param PostRepository $postRepository
+     * @param SerializerInterface $serializer
+     * @return Response
+     */
+    public function postShowAll(PostRepository $postRepository, SerializerInterface $serializer): Response
+    {
+        $posts = $postRepository->findAll();
+
+        $postsSerialized = $serializer->serialize(new PostCollection($posts), 'json', [
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            }
+        ]);
+
+        return new JsonResponse($postsSerialized, 200, [], true);
+    }
+
+    /**
      * @Route("/posts/{slug}", methods={"GET"}, name="blog_post")
      *
      * NOTE: The $post controller argument is automatically injected by Symfony
      * after performing a database query looking for a Post with the 'slug'
      * value given in the route.
      * See https://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/annotations/converters.html
+     * @param Post $post
+     * @param Request $request
+     * @param SerializerInterface $serializer
+     * @return Response
      */
-    public function postShow(Post $post): Response
+    public function postShow(Post $post, Request $request, SerializerInterface $serializer): Response
     {
         // Symfony's 'dump()' function is an improved version of PHP's 'var_dump()' but
         // it's not available in the 'prod' environment to prevent leaking sensitive information.
@@ -77,8 +106,73 @@ class BlogController extends AbstractController
         // have enabled the DebugBundle. Uncomment the following line to see it in action:
         //
         // dump($post, $this->getUser(), new \DateTime());
+        if ($request->query->get('format') === 'json') {
+            return new JsonResponse($serializer->serialize($post, 'json',  [
+                'circular_reference_handler' => function ($object) {
+                    return $object->getId();
+                }
+            ]), 200, [], true);
+        } else {
+            return $this->render('blog/post_show.html.twig', ['post' => $post]);
+        }
+    }
 
-        return $this->render('blog/post_show.html.twig', ['post' => $post]);
+    /**
+     * @Route("/users", methods={"GET"}, name="blog_users")
+     * @param UserRepository $userRepository
+     * @param SerializerInterface $serializer
+     * @return Response
+     */
+    public function userShowAll(UserRepository $userRepository, SerializerInterface $serializer): Response
+    {
+        $users = $userRepository->findAll();
+
+        $usersSerialized = $serializer->serialize(new UserCollection($users), 'json');
+
+        return new JsonResponse($usersSerialized, 200, [], true);
+    }
+
+    /**
+     * @Route("/users/{id}", methods={"GET"}, name="blog_user")
+     *
+     * NOTE: The $post controller argument is automatically injected by Symfony
+     * after performing a database query looking for a Post with the 'slug'
+     * value given in the route.
+     * See https://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/annotations/converters.html
+     * @param User $user
+     * @param SerializerInterface $serializer
+     * @return Response
+     */
+    public function userShow(User $user, SerializerInterface $serializer): Response
+    {
+
+        return new JsonResponse($serializer->serialize($user, 'json'), JsonResponse::HTTP_OK, [], true);
+    }
+
+    /**
+     * Create a new User entity from JSON
+     *
+     * @Route("/user/create", methods={"POST"}, name="admin_user_create")
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function createUser(Request $request, SerializerInterface $serializer): Response
+    {
+        $data = json_decode($request->getContent(), true);
+
+        $user = new User();
+        $user->setEmail($data['email']);
+        $user->setFullName($data['full_name']);
+        $user->setPassword('');
+        $user->setUsername($data['username']);
+        $user->setRoles([]);
+
+        $em = $this->getDoctrine()->getManager();
+        $em->persist($user);
+        $em->flush();
+
+        return new JsonResponse($serializer->serialize($user, 'json'), JsonResponse::HTTP_CREATED, [], true);
     }
 
     /**
