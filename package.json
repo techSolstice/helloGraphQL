@@ -24,15 +24,13 @@
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
-    "dev-server": "encore dev-server",
-    "dev": "encore dev",
-    "watch": "encore dev --watch",
-    "build": "encore production --progress"
+    "watch": "babel-watch server.js",
+    "start": "node server.js"
   },
   "name": "graphqlIntro",
   "description": "Symfony Demo Application ========================",
   "version": "1.0.0",
-  "main": "webpack.config.js",
+  "main": "server.js",
   "directories": {
     "test": "tests"
   },
