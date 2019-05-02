@@ -6,6 +6,7 @@
     "@babel/polyfill": "^7.4.4",
     "@babel/preset-env": "^7.4.4",
     "@symfony/webpack-encore": "^0.26.0",
+    "babel-watch": "^7.0.0",
     "bloodhound-js": "^1.2.3",
     "bootstrap-sass": "^3.3.7",
     "bootstrap-tagsinput": "^0.7.1",
