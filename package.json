@@ -1,5 +1,10 @@
 {
   "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.4",
+    "@babel/plugin-transform-runtime": "^7.4.4",
+    "@babel/polyfill": "^7.4.4",
+    "@babel/preset-env": "^7.4.4",
     "@symfony/webpack-encore": "^0.26.0",
     "bloodhound-js": "^1.2.3",
     "bootstrap-sass": "^3.3.7",
@@ -23,5 +28,19 @@
     "dev": "encore dev",
     "watch": "encore dev --watch",
     "build": "encore production --progress"
+  },
+  "name": "graphqlIntro",
+  "description": "Symfony Demo Application ========================",
+  "version": "1.0.0",
+  "main": "webpack.config.js",
+  "directories": {
+    "test": "tests"
+  },
+  "keywords": [],
+  "author": "",
+  "dependencies": {
+    "apollo-datasource-rest": "^0.3.2",
+    "apollo-server": "^2.4.8",
+    "graphql": "^14.2.1"
   }
 }
