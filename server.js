@@ -1,22 +1,26 @@
 const { ApolloServer, gql } = require('apollo-server');
 
-const exampleResponse = [
-    {
-        id: 2,
-        username: "test_user9000",
-        age: 18,
-    },
-    {
-        id: 3,
-        username: "test_user9000",
-        age: null,
-    },
-];
+import '@babel/polyfill';
+import { SocialApi } from './datasource';
 
 // Type Definitions go here
 const typeDefs = gql`
     type Query {
-        getUsers: [User!]
+        getPosts: PostCollection
+    }
+
+    type Mutation {
+        createUser(email: String!, username: String!, full_name: String): User!
+    }
+
+    type PostCollection {
+        posts: [Post!]!
+    }
+
+    type Post {
+        id: Int!
+        title: String!
+        slug: String!
     }
 
     type User {
@@ -26,17 +30,23 @@ const typeDefs = gql`
     }
 `;
 
-
 // Resolvers go here
 const resolvers = {
     Query: {
-        getUsers: () => exampleResponse
+        getPosts: (root, args, { dataSources }) => dataSources.socialApi.getPosts(),
     },
+    Mutation: {
+        createUser: async (parent, args, {dataSources}) => {
+            return await dataSources.socialApi.createUser(args);
+        }
+    }
 };
 
-
 // Create the ApolloServer instance
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs, resolvers, dataSources: () => ({
+        socialApi: new SocialApi()
+    })
+});
 
 // Launch the server
 server.listen().then(({ url }) => {
