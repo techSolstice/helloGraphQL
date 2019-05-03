@@ -1,3 +1,6 @@
+Slides https://docs.google.com/presentation/d/1EyjGfw9EvOdiRE2MjXQ1CzTXqG_dAV6IDlIkX4ACjVg/edit?usp=sharing
+Graphiql demo https://lucasconstantino.github.io/graphiql-online/
+
 ```sh
 sudo apt install php7.2-sqlite3
 composer create-project symfony/symfony-demo helloGraphQL
